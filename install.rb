@@ -46,7 +46,7 @@ xml=<<LAUNCHCTLPLIST
 		<key>Hour</key>
 		<integer>23</integer>
 		<key>Minute</key>
-		<integer>50</integer>
+		<integer>57</integer>
 	</dict>
 </dict>
 </plist>
