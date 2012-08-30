@@ -18,6 +18,8 @@ Slogger indexes various public social services and creates Day One (<http://dayo
         -  Instapaper (Unread and/or individual folders)
         -  Foursquare (Checkins for the day)
         -  Pinboard (Daily digest with descriptions and option for tags)
+        -  Pocket (Digest list of links, read and unread, posted to Pocket)
+        -  Goodreads books marked read for the day, one entry each with book cover image, ratings and your review. Inserted at the date marked finished.
 - Slogger can be called with a single argument that is a path to a local image, and an entry will be created for that image.
     - You can use this with a folder action or launchd task to add files from a folder connected to something like <http://IFTTT.com>. Any images added to the watched folder will be turned into journal entries.
         -  Note that Slogger does not delete the original image, so your script needs to move files out of the folder manually to avoid double-processing.
@@ -38,12 +40,21 @@ Slogger indexes various public social services and creates Day One (<http://dayo
 
 ## Command line options ##
 
+    $ ./slogger -h
     Usage: slogger [-dq] [-r X] [/path/to/image.jpg]
-        -d, --develop            Develop mode
-        -t, --timespan           The day range to gather (default 1)
-        -q, --quiet              Run quietly (no notifications/messages)
-        -r, --retries COUNT      Maximum number of retries per plugin (int)
-        -h, --help               Display this screen
+        -c, --config FILE                Specify alternate configuration file
+        -d, --develop                    Develop mode
+        -o, --onlyrun NAME[,NAME2...]    Only run plugins matching items in comma-delimited string (partial names ok)
+        -t, --timespan DAYS              Days of history to collect
+        -q, --quiet                      Run quietly (no notifications/messages)
+        -r, --retries COUNT              Maximum number of retries per plugin (int)
+        -s, --since-last                 Set the timespan to the last run date
+        -v, --version                    Display the version number
+        -h, --help                       Display this screen
+
+> **Note:** You can use the `-s` option to only log since the last run date, handy if you want to run Slogger more than once per day or are testing plugins. 
+>
+> You can also use `-o` to run only a certain plugin in the standard plugin directory: just provide it with enough of the name to be unique, e.g. `slogger -o gist`.
 
 ## Plugin development ##
 
