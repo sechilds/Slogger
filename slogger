@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 MAJOR_VERSION = 2.0
-MINOR_VERSION = 10
-BUILD_NUMBER = 3
+MINOR_VERSION = 12
+BUILD_NUMBER = 1
 require 'open-uri'
 require 'net/http'
 require 'net/https'
@@ -67,7 +67,6 @@ class Slogger
       end
       output = $options[:quiet] ? '' : "#{abbr_sev}#{datetime.strftime('%H:%M:%S')} #{spacer}#{progname}: #{msg}\n"
       output
-      # original_formatter.call(severity, datetime, progname, msg.dump)
     }
 
     @template = self.template
@@ -85,6 +84,7 @@ class Slogger
     else
       @timespan = Time.now - ((60 * 60 * 24) * $options[:timespan])
     end
+    @config['image_filename_is_title'] ||= false
   end
 
   def undo_slogger(count = 1)
@@ -131,11 +131,11 @@ class Slogger
 	    elsif File.exists?(File.expand_path(@config['storage']))
 	      return File.expand_path(@config['storage'])
 	    else
-	      raise "Path not specified or doesn't exist: #{@config['storage']}"
+        raise "Path for Day One journal is not specified or doesn't exist. Change your path in slogger_config and run ./slogger again: #{@config['storage']}"
 	      Process.exit(-1)
 	    end
 	else
-	  raise "Path not specified or doesn't exist: #{@config['storage']}"
+	  raise "Path for Day One journal is not specified or doesn't exist. Change your path in slogger_config and run ./slogger again: #{@config['storage']}"
 	  return
 	end
   end
@@ -251,8 +251,15 @@ $slog = Slogger.new
 $slog.dayonepath = $slog.storage_path
 
 if ARGV.length > 0
-  if File.exists?(File.expand_path(ARGV[0]))
-    DayOne.new.store_single_photo(ARGV[0],{},true)
+  path = File.expand_path(ARGV[0])
+  if File.exists?(path)
+    unless path =~ /\.(jpg|png|gif)/i
+      File.open(path,'r') do | f |
+        DayOne.new.to_dayone({ 'content' => f.read })
+      end
+    else
+      DayOne.new.store_single_photo(ARGV[0],{},true)
+    end
   else
     raise "File \"#{ARGV[0]}\" not found."
   end
@@ -266,11 +273,3 @@ else
     $slog.undo_slogger($options[:undo])
   end
 end
-
-# TODO: Document plugin architecture
-# TODO: Handle RSS anomolies, fail gracefully
-# TODO: Command line option for defining timespan to pull for
-# TODO: Command line option for undo
-# TODO: Command line help (slogger -h)
-# TODO: Sort plugin options, extract descriptions to MD file w/command line option to display (slogger --plugins)
-# TODO: GUI

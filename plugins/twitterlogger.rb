@@ -47,7 +47,7 @@ class TwitterLogger < Slogger
       options['uuid'] = %x{uuidgen}.gsub(/-/,'').strip
       sl = DayOne.new
       path = sl.save_image(image['url'],options['uuid'])
-      sl.store_single_photo(path,options)
+      sl.store_single_photo(path,options) unless path == false
     end
 
     return true
@@ -87,7 +87,7 @@ class TwitterLogger < Slogger
           }
         end
         begin
-          if config['save_images']
+          if @twitter_config['save_images']
             tweet_images = []
             unless tweet.elements['entities/media'].nil? || tweet.elements['entities/media'].length == 0
               tweet.elements.each("entities/media/creative") { |img|
@@ -103,10 +103,11 @@ class TwitterLogger < Slogger
               final_url = self.get_body(picurl[0]).match(/"(http:\/\/pics.campl.us\/f\/c\/.+?)"/)
               tweet_images << { 'content' => tweet_text, 'date' => tweet_date.utc.iso8601, 'url' => final_url[1] } unless final_url.nil?
             end
-            tweet_text.scan(/\((http:\/\/#{config['droplr_domain']}\/\w+?)\)/).each do |picurl|
-              final_url = self.get_body(picurl[0]).match(/"(https:\/\/s3.amazonaws.com\/files.droplr.com\/.+?)"/)
-              tweet_images << { 'content' => tweet_text, 'date' => tweet_date.utc.iso8601, 'url' => final_url[1] } unless final_url.nil?
-            end
+            # Drop.lr downloads temporarily broken
+            # tweet_text.scan(/\((http:\/\/#{@twitter_config['droplr_domain']}\/\w+?)\)/).each do |picurl|
+            #   # final_url = self.get_body(picurl[0]).match(/"(https:\/\/s3.amazonaws.com\/files.droplr.com\/.+?)"/)
+            #   tweet_images << { 'content' => tweet_text, 'date' => tweet_date.utc.iso8601, 'url' => picurl[0]+"+" } # unless final_url.nil?
+            # end
             tweet_text.scan(/\((http:\/\/instagr\.am\/\w\/\w+?\/)\)/).each do |picurl|
               final_url = self.get_body(picurl[0]).match(/"(http:\/\/distillery.*?\.instagram\.com\/[a-z0-9_]+\.jpg)"/i)
               tweet_images << { 'content' => tweet_text, 'date' => tweet_date.utc.iso8601, 'url' => final_url[1] } unless final_url.nil?
@@ -116,13 +117,12 @@ class TwitterLogger < Slogger
           raise "Failure gathering images urls"
           p e
         end
-        if tweet_images.nil?
-          tweets += "\n* [[#{tweet_date.strftime('%I:%M %p')}](https://twitter.com/#{user}/status/#{tweet_id})] #{tweet_text}"
-        else
+        tweets += "\n* [[#{tweet_date.strftime('%I:%M %p')}](https://twitter.com/#{user}/status/#{tweet_id})] #{tweet_text}"
+        unless tweet_images.empty?
           images.concat(tweet_images)
         end
       }
-      if config['save_images'] && images
+      if @twitter_config['save_images'] && images
         begin
           self.download_images(images)
         rescue Exception => e
@@ -140,9 +140,9 @@ class TwitterLogger < Slogger
   end
 
   def do_log
-    if config.key?(self.class.name)
-        config = @config[self.class.name]
-        if !config.key?('twitter_users') || config['twitter_users'] == []
+    if @config.key?(self.class.name)
+        @twitter_config = @config[self.class.name]
+        if !@twitter_config.key?('twitter_users') || @twitter_config['twitter_users'] == []
           @log.warn("Twitter users have not been configured, please edit your slogger_config file.")
           return
         end
@@ -151,14 +151,14 @@ class TwitterLogger < Slogger
       return
     end
 
-    config['save_images'] ||= true
-    config['droplr_domain'] ||= 'd.pr'
+    @twitter_config['save_images'] ||= true
+    @twitter_config['droplr_domain'] ||= 'd.pr'
 
     sl = DayOne.new
-    config['twitter_tags'] ||= ''
-    tags = "\n\n#{config['twitter_tags']}\n" unless config['twitter_tags'] == ''
+    @twitter_config['twitter_tags'] ||= ''
+    tags = "\n\n#{@twitter_config['twitter_tags']}\n" unless @twitter_config['twitter_tags'] == ''
 
-    config['twitter_users'].each do |user|
+    @twitter_config['twitter_users'].each do |user|
       retries = 0
       success = false
       until success
@@ -185,13 +185,12 @@ class TwitterLogger < Slogger
           sleep 2
         end
       end
-
       unless tweets == ''
-        tweets = "## @#{user} on #{Time.now.strftime('%m-%d-%Y')}\n\n#{tweets}#{tags}"
+        tweets = "## Tweets\n\n ### Posts by @#{user} on #{Time.now.strftime('%m-%d-%Y')}\n\n#{tweets}#{tags}"
         sl.to_dayone({'content' => tweets})
       end
       unless favs == ''
-        favs = "## @#{user} favorites for #{Time.now.strftime('%m-%d-%Y')}\n\n#{favs}#{tags}"
+        favs = "## Favorite Tweets\n\n### Favorites from @#{user} for #{Time.now.strftime('%m-%d-%Y')}\n\n#{favs}#{tags}"
         sl.to_dayone({'content' => favs})
       end
     end
