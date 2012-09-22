@@ -1,3 +1,5 @@
+Support Slogger by contributing to my [GitTip fund](https://www.gittip.com/ttscoff/).
+
 ## Upgrade Note ##
 
 *If you are upgrading from a version prior to 2.0.12, please remove the RSSLogger section from `slogger_config` and regenerate it by running slogger again. A new section will be added in addition to RSSLogger called Bloglogger. RSSLogger now logs all entries for the timespan as a single digest entry, whereas Bloglogger loads each item found as an individual "post."*
@@ -10,21 +12,40 @@ Slogger indexes various public social services and creates Day One (<http://dayo
 
 - Slogger 2.x uses a plugin architecture to allow easy extension
     - Default plugins:
-        -  Gist (gists created in the last 24 hours. Title and description only, logged as a single digest)
-        -  Flickr (images uploaded in the last 24 hours, each as an individual post. Can handle multiple accounts)
-        -  Last.fm (Scrobbled songs for the current day)
-        -  Blog entries (designed to pull in your blog posts with leading image and excerpt (optionally markdownified). Handles multiple feeds)
-        -  RSS Feeds (logs any feed entries for the given timespan as a digest entry, handles multiple feeds)
-        -  Twitter (Tweets and Favorites for the day as digest entries, handles multiple Twitter accounts)
-        -  Instapaper (Unread and/or individual folders)
-        -  Foursquare (Checkins for the day)
-        -  Pinboard (Daily digest with descriptions and option for tags)
-        -  Pocket (Digest list of links, read and unread, posted to Pocket)
-        -  Goodreads books marked read for the day, one entry each with book cover image, ratings and your review. Inserted at the date marked finished.
+        -  Github
+            -  new plugin, supercedes Gist logger. 
+            -  Logs push, watch and gist activity
+        -  Flickr
+            - images uploaded in the last 24 hours, each as an individual post
+            - Can handle multiple accounts
+        -  Last.fm 
+            - Scrobbled songs for the current day
+            - *updated to grab more songs*
+        -  Blog entries
+            -  designed to pull in your blog posts with leading image and excerpt (optionally markdownified). 
+            -  Handles multiple feeds
+        -  RSS Feeds
+            -  logs any feed entries for the given timespan as a digest entry
+            -  handles multiple feeds
+        -  Twitter
+            -  Tweets and Favorites for the day as digest entries
+            -  handles multiple Twitter accounts
+        -  Instapaper
+            -  Unread and/or individual folders
+        -  Foursquare 
+            -  Checkins for the day
+        -  Pinboard 
+            -  Daily digest with descriptions
+            -  optionally include bookmark tags in entry
+        -  Pocket
+            -  Digest list of links---read and unread---posted to Pocket
+        -  Goodreads 
+            -  books marked read for the day, one entry each with book cover image, ratings and your review. 
+            -  Inserted at the date marked finished.
         -  App.net
-- Slogger can be called with a single argument that is a path to a local image, and an entry will be created for that image.
+- Slogger can be called with a single argument that is a path to a local image or text file, and an entry will be created containing its contents.
     - You can use this with a folder action or launchd task to add files from a folder connected to something like <http://IFTTT.com>. Any images added to the watched folder will be turned into journal entries.
-        -  Note that Slogger does not delete the original image, so your script needs to move files out of the folder manually to avoid double-processing.
+        -  Note that Slogger does not delete the original file, so your script needs to move files out of the folder manually to avoid double-processing.
 
 ## Configure ##
 
