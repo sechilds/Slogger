@@ -15,8 +15,10 @@ config = {
     'Logs updates and favorites for specified Twitter users',
     'twitter_users should be an array of Twitter usernames, e.g. [ ttscoff, markedapp ]',
     'save_images (true/false) determines weather TwitterLogger will look for image urls and include them in the entry',
+    'save_favorites (true/false) determines weather TwitterLogger will look for the favorites of the given usernames and include them in the entry',
     'droplr_domain: if you have a custom droplr domain, enter it here, otherwise leave it as d.pr '],
   'twitter_users' => [],
+  'save_favorites' => true,
   'save_images' => true,
   'droplr_domain' => 'd.pr',
   'twitter_tags' => '@social @twitter'
@@ -116,8 +118,9 @@ class TwitterLogger < Slogger
             #   # final_url = self.get_body(picurl[0]).match(/"(https:\/\/s3.amazonaws.com\/files.droplr.com\/.+?)"/)
             #   tweet_images << { 'content' => tweet_text, 'date' => tweet_date.utc.iso8601, 'url' => picurl[0]+"+" } # unless final_url.nil?
             # end
-            tweet_text.scan(/\((http:\/\/instagr\.am\/\w\/\w+?\/)\)/).each do |picurl|
-              final_url=self.get_body(picurl[0]).match(/http:\/\/distilleryimage.....[a-z]+.com[\W][a-z0-9_]+.jpg/)
+
+            tweet_text.scan(/\((http:\/\/instagr\.am\/\w\/.+?\/)\)/).each do |picurl|
+              final_url=self.get_body(picurl[0]).match(/http:\/\/distilleryimage.*?\.com\/[a-z0-9_]+\.jpg/)
               tweet_images << { 'content' => tweet_text, 'date' => tweet_date.utc.iso8601, 'url' => final_url[0] } unless final_url.nil?
             end
             tweet_text.scan(/http:\/\/[\w\.]*yfrog\.com\/[\w]+/).each do |picurl|
@@ -190,16 +193,20 @@ class TwitterLogger < Slogger
       end
       retries = 0
       success = false
-      until success
-        favs = self.get_tweets(user,'favorites')
-        if favs
-          success = true
-        else
-          break if $options[:max_retries] == retries
-          retries += 1
-          @log.error("Error parsing Favorites for #{user}, retrying (#{retries}/#{$options[:max_retries]})")
-          sleep 2
+      if @twitter_config['save_favorites']
+        until success
+          favs = self.get_tweets(user,'favorites')
+          if favs
+            success = true
+          else
+            break if $options[:max_retries] == retries
+            retries += 1
+            @log.error("Error parsing Favorites for #{user}, retrying (#{retries}/#{$options[:max_retries]})")
+            sleep 2
+          end
         end
+      else
+        favs = ''
       end
       unless tweets == ''
         tweets = "## Tweets\n\n### Posts by @#{user} on #{Time.now.strftime('%m-%d-%Y')}\n\n#{tweets}#{tags}"
