@@ -1,9 +1,11 @@
+require 'fileutils'
+
 class DayOne < Slogger
   def to_dayone(options = {})
     @dayonepath = storage_path
     markdown = @dayonepath =~ /Journal[._]dayone\/?$/ ? false : true
     content = options['content'] || ''
-    tags = content.scan(/#([A-Za-z0-9]+)/m).map { |tag| tag[0] }.delete_if {|tag| tag =~ /^\d+$/ }
+    tags = content.scan(/#([A-Za-z0-9]+)/m).map { |tag| tag[0] }.delete_if {|tag| tag =~ /^\d+$/ }.uniq.sort
     unless markdown
       uuid = options['uuid'] || %x{uuidgen}.gsub(/-/,'').strip
       datestamp = options['datestamp'] || Time.now.utc.iso8601
@@ -56,7 +58,10 @@ class DayOne < Slogger
           @log.warn("Download failed")
           return false
         else
-          open( File.expand_path(target), "wb" ) { |file| file.write(data) }
+          path = File.expand_path(target)
+          dir = File.dirname(path)
+          FileUtils::mkdir_p(dir)
+          open( path, "wb" ) { |file| file.write(data) }
         end
       end
       return target
